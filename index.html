@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food AI Kitchen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <button id="openFavBtn" class="fav-toggle-btn">
+        <i class="ph ph-heart-fill"></i>
+        <span id="favCountBadge">0</span>
+    </button>
+
+    <div class="app-container">
+        <main class="main-content">
+            <header class="app-header">
+                <h1>Kitchen AI</h1>
+                <p>探索．烹飪．美味生活</p>
+            </header>
+
+            <section class="input-section">
+                <div class="input-wrapper">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="ingredientInput" placeholder="例如：雞胸肉 地瓜" autocomplete="off">
+                </div>
+            </section>
+
+            <section class="filter-section">
+                <h3>Cooking Tools</h3>
+                <div class="pill-group" id="methodGroup">
+                    <button class="pill" data-value="電鍋">電鍋</button>
+                    <button class="pill" data-value="氣炸鍋">氣炸鍋</button>
+                    <button class="pill" data-value="平底鍋">平底鍋</button>
+                    <button class="pill" data-value="微波爐">微波爐</button>
+                    <button class="pill" data-value="烤箱">烤箱</button>
+                </div>
+            </section>
+
+            <section class="filter-section">
+                <h3>Preferences</h3>
+                <div class="pill-group" id="constraintGroup">
+                    <button class="pill" data-value="減脂">減脂</button>
+                    <button class="pill" data-value="高蛋白">高蛋白</button>
+                    <button class="pill" data-value="快速料理">快速料理</button>
+                    <button class="pill" data-value="便當菜">便當菜</button>
+                </div>
+            </section>
+
+            <div class="action-area">
+                <button id="searchBtn" class="primary-btn">
+                    <span class="btn-text">尋找料理靈感</span>
+                    <div class="loading-spinner hidden"></div>
+                </button>
+            </div>
+
+            <div id="resultsArea" class="cards-grid"></div>
+        </main>
+
+        <aside id="flowSidebar" class="flow-sidebar">
+            <div class="drawer-header">
+                <h2>待辦料理</h2>
+                <button id="closeFlowBtn" class="icon-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="flowList" style="flex:1; overflow-y:auto;">
+                <div class="empty-state" style="text-align:center; color:#ccc; margin-top:50px;">
+                    <i class="ph ph-list-plus" style="font-size:32px;"></i>
+                    <p>尚未加入料理</p>
+                </div>
+            </div>
+            <div class="sidebar-footer" style="margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; color:#666; font-size:0.9rem;">
+                    <span>已選料理</span>
+                    <span id="recipeCount" style="font-weight:700;">0</span>
+                </div>
+                <button id="generateFlowBtn" class="primary-btn" style="width:100%; justify-content:center; padding:18px;" disabled>
+                    <i class="ph ph-magic-wand"></i> 產生流程
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <div id="favDrawer" class="left-drawer">
+        <div class="drawer-header">
+            <h2><i class="ph ph-heart-fill" style="color:#FF6B81;"></i> 我的收藏庫</h2>
+            <button id="closeFavBtn" class="icon-btn"><i class="ph ph-x"></i></button>
+        </div>
+        <div id="favListContent" style="overflow-y:auto; flex:1;"></div>
+    </div>
+    
+    <!-- 右下角 FAB (已修正：預設隱藏 0) -->
+    <div id="toggleFlowBtn" class="fab-flow-toggle">
+        <i class="ph ph-plus"></i>
+        <div class="badge-dot" style="display: none;">0</div>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+
+    <div id="resultModal" class="modal hidden">
+        <div class="modal-content" id="captureTarget">
+            <div class="modal-header-banner">
+                <div class="modal-header-title"><h2>今日主廚流程</h2></div>
+                <div class="modal-tools">
+                    <button id="btnLine" class="tool-btn line-btn" title="分享到 LINE"><i class="ph ph-chat-circle-dots"></i></button>
+                    <button id="btnShare" class="tool-btn" title="更多分享"><i class="ph ph-share-network"></i></button>
+                    <button id="btnCopy" class="tool-btn" title="複製"><i class="ph ph-copy"></i></button>
+                    <button id="btnScreenshot" class="tool-btn" title="截圖"><i class="ph ph-camera"></i></button>
+                    <div class="divider"></div>
+                    <button class="close-modal"><i class="ph ph-x"></i></button>
+                </div>
+            </div>
+            <div id="finalFlowContent" class="modal-scroll-area markdown-body"></div>
+        </div>
+    </div>
+
+    <div id="recipeDetailModal" class="modal hidden">
+        <div class="modal-content" id="captureRecipeTarget">
+            <div class="modal-header-banner">
+                <div class="modal-header-title"><h2 id="detailTitle">料理名稱</h2></div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div id="modalActions" class="modal-actions"></div>
+                    <div class="modal-tools">
+                        <div class="divider"></div>
+                        <button id="btnLineRecipe" class="tool-btn line-btn"><i class="ph ph-chat-circle-dots"></i></button>
+                        <button id="btnShareRecipe" class="tool-btn"><i class="ph ph-share-network"></i></button>
+                        <button id="btnCopyRecipe" class="tool-btn"><i class="ph ph-copy"></i></button>
+                        <button id="btnScreenshotRecipe" class="tool-btn"><i class="ph ph-camera"></i></button>
+                    </div>
+                    <button class="close-modal"><i class="ph ph-x"></i></button>
+                </div>
+            </div>
+            <div class="modal-scroll-area">
+                <div id="detailContent" class="markdown-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

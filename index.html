@@ -26,7 +26,7 @@
             <section class="input-section">
                 <div class="input-wrapper">
                     <i class="ph ph-magnifying-glass"></i>
-                    <input type="text" id="ingredientInput" placeholder="例如：雞胸肉 地瓜 (自動排除鹹酥雞)" autocomplete="off">
+                    <input type="text" id="ingredientInput" placeholder="tips✨可輸入兩個以上的字詞，例如：雞胸肉 地瓜" autocomplete="off">
                 </div>
             </section>
 
@@ -99,16 +99,16 @@
 
     <div id="overlay" class="overlay"></div>
 
-    <!-- Modal 1: 最終流程 -->
+    <!-- Modal 1: 流程 -->
     <div id="resultModal" class="modal hidden">
         <div class="modal-content" id="captureTarget">
             <div class="modal-header-banner">
                 <div class="modal-header-title"><h2>今日主廚流程</h2></div>
                 <div class="modal-tools">
-                    <button id="btnLine" class="tool-btn line-btn" title="分享到 LINE"><i class="ph ph-chat-circle-dots"></i></button>
-                    <button id="btnShare" class="tool-btn" title="更多分享"><i class="ph ph-share-network"></i></button>
-                    <button id="btnCopy" class="tool-btn" title="複製"><i class="ph ph-copy"></i></button>
-                    <button id="btnScreenshot" class="tool-btn" title="截圖"><i class="ph ph-camera"></i></button>
+                    <button id="btnLine" class="tool-btn line-btn" title="LINE"><i class="ph ph-chat-circle-dots"></i></button>
+                    <button id="btnShare" class="tool-btn" title="Share"><i class="ph ph-share-network"></i></button>
+                    <button id="btnCopy" class="tool-btn" title="Copy"><i class="ph ph-copy"></i></button>
+                    <button id="btnScreenshot" class="tool-btn" title="Shot"><i class="ph ph-camera"></i></button>
                     <div class="divider"></div>
                     <button class="close-modal"><i class="ph ph-x"></i></button>
                 </div>
@@ -117,7 +117,7 @@
         </div>
     </div>
 
-    <!-- Modal 2: 單一食譜 (含 YouTube & AI 圖解) -->
+    <!-- Modal 2: 食譜 -->
     <div id="recipeDetailModal" class="modal hidden">
         <div class="modal-content" id="captureRecipeTarget">
             <div class="modal-header-banner">
@@ -135,11 +135,9 @@
                 </div>
             </div>
             <div class="modal-scroll-area">
-                <!-- YouTube 播放器容器 -->
-                <div id="videoContainer" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:20px; margin-bottom:30px; display:none; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <div id="videoContainer" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:16px; margin-bottom:30px; display:none; overflow:hidden;">
                     <iframe id="youtubeFrame" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
-                
                 <div id="detailContent" class="markdown-body"></div>
             </div>
         </div>

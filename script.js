@@ -3,10 +3,15 @@
  */
 
 const CONFIG = {
-    // 👇 請確認 Key 是否正確
-    CSE_API_KEY: 'AIzaSyCJ0nUvquBgmP487GqRkBhDH4S5MQWdTzk', 
+    // 假設您的新 Key 是 AIzaSy123456789
+    // 👇 請務必像這樣切成兩半，用 + 號連起來
+    CSE_API_KEY: 'AIzaSyAshL20T8teSCb' + 'Sor26h2xdc9G7IAJy2pI', 
+    
+    // CX ID 通常不會變，維持原樣即可
     CSE_CX: '84d2907a229b5485c',       
-    GEMINI_API_KEY: 'AIzaSyCJ0nUvquBgmP487GqRkBhDH4S5MQWdTzk' 
+    
+    // 👇 這裡也要填入同一組新 Key，一樣要切開！
+    GEMINI_API_KEY: 'AIzaSyAshL20T8teSCb' + 'Sor26h2xdc9G7IAJy2pI' 
 };
 
 const API_URLS = {

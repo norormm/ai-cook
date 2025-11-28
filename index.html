@@ -26,7 +26,7 @@
             <section class="input-section">
                 <div class="input-wrapper">
                     <i class="ph ph-magnifying-glass"></i>
-                    <input type="text" id="ingredientInput" placeholder="例如：雞胸肉 地瓜" autocomplete="off">
+                    <input type="text" id="ingredientInput" placeholder="例如：雞胸肉 地瓜 (自動排除鹹酥雞)" autocomplete="off">
                 </div>
             </section>
 
@@ -92,7 +92,6 @@
         <div id="favListContent" style="overflow-y:auto; flex:1;"></div>
     </div>
     
-    <!-- 右下角 FAB (已修正：預設隱藏 0) -->
     <div id="toggleFlowBtn" class="fab-flow-toggle">
         <i class="ph ph-plus"></i>
         <div class="badge-dot" style="display: none;">0</div>
@@ -100,6 +99,7 @@
 
     <div id="overlay" class="overlay"></div>
 
+    <!-- Modal 1: 最終流程 -->
     <div id="resultModal" class="modal hidden">
         <div class="modal-content" id="captureTarget">
             <div class="modal-header-banner">
@@ -117,6 +117,7 @@
         </div>
     </div>
 
+    <!-- Modal 2: 單一食譜 (含 YouTube & AI 圖解) -->
     <div id="recipeDetailModal" class="modal hidden">
         <div class="modal-content" id="captureRecipeTarget">
             <div class="modal-header-banner">
@@ -134,6 +135,11 @@
                 </div>
             </div>
             <div class="modal-scroll-area">
+                <!-- YouTube 播放器容器 -->
+                <div id="videoContainer" style="width:100%; aspect-ratio:16/9; background:#000; border-radius:20px; margin-bottom:30px; display:none; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <iframe id="youtubeFrame" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                
                 <div id="detailContent" class="markdown-body"></div>
             </div>
         </div>

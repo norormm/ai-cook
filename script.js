@@ -356,104 +356,160 @@ async function callGemini(prompt) {
     return data.candidates[0].content.parts[0].text.replace(/```html|```/g, '');
 }
 
-// ⭐ C. Screenshot Fix (Wait for Images)
+// --- Tools Binding ---
+
+// 綁定兩組 Modal 的按鈕
 bindTools('btnShare', 'btnCopy', 'btnScreenshot', 'btnLine', 'finalFlowContent', 'captureTarget', '今日主廚流程');
 bindTools('btnShareRecipe', 'btnCopyRecipe', 'btnScreenshotRecipe', 'btnLineRecipe', 'detailContent', 'captureRecipeTarget', '料理食譜');
 
 function bindTools(shareId, copyId, shotId, lineId, contentId, captureId, titleText) {
-    const share = document.getElementById(shareId); const copy = document.getElementById(copyId);
-    const shot = document.getElementById(shotId); const line = document.getElementById(lineId);
+    const share = document.getElementById(shareId);
+    const copy = document.getElementById(copyId);
+    const shot = document.getElementById(shotId);
+    const line = document.getElementById(lineId);
 
-    if(line) line.addEventListener('click', () => {
+    // 1. LINE 分享
+    if (line) line.onclick = () => {
         const text = document.getElementById(contentId).innerText;
         window.open(`https://line.me/R/msg/text/?${encodeURIComponent(titleText + "\n\n" + text)}`, '_blank');
-    });
+    };
 
-    if(share) share.addEventListener('click', async () => {
+    // 2. 原生分享
+    if (share) share.onclick = async () => {
         const text = document.getElementById(contentId).innerText;
-        if (navigator.share) try { await navigator.share({ title: titleText, text: text }); } catch (e) {}
-        else { copyToClipboard(text, copy); alert('已複製文字'); }
-    });
-
-    if(copy) copy.addEventListener('click', () => copyToClipboard(document.getElementById(contentId).innerText, copy));
-
-    if(shot) shot.addEventListener('click', () => {
-        const origin = shot.innerHTML;
-        shot.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#333;"></div>';
-        
-        const source = document.getElementById(captureId);
-        const clone = source.cloneNode(true);
-        
-        // 1. 對 Clone 本體強制展開 (覆蓋 CSS)
-        clone.style.cssText = `
-            position: fixed; 
-            top: -10000px; 
-            left: 0; 
-            width: 800px; /* 固定寬度確保排版一致 */
-            height: auto !important; /* 強制高度自動 */
-            max-height: none !important; /* ⭐ 關鍵：移除最大高度限制 */
-            overflow: visible !important; /* ⭐ 關鍵：移除捲軸 */
-            background: #ffffff; 
-            z-index: -1;
-        `;
-        
-        // 強制移除圖片的淡入動畫題
-        const animatedImages = clone.querySelectorAll('.step-img');
-        animatedImages.forEach(img => {
-            img.style.animation = 'none';     // 關閉動畫
-            img.style.transition = 'none';    // 關閉轉場
-            img.style.opacity = '1';          // 強制完全不透明
-        });
-
-        // 2. 移除不必要的元素
-        const vid = clone.querySelector('#videoContainer'); if(vid) vid.remove();
-        const loadBtn = clone.querySelector('#loadVideoBtn'); if(loadBtn) loadBtn.remove();
-
-        // 3. 對內部的 Scroll Area 也強制展開
-        const scroll = clone.querySelector('.modal-scroll-area');
-        if(scroll) {
-            scroll.style.cssText = `
-                height: auto !important; 
-                max-height: none !important; /* ⭐ 雙重保險 */
-                overflow: visible !important; /* ⭐ 確保 html2canvas 抓到全部 */
-                padding: 40px !important;
-            `;
+        if (navigator.share) {
+            try { await navigator.share({ title: titleText, text: text }); } catch (e) {}
+        } else {
+            copyToClipboard(text, copy);
+            alert('已複製內容');
         }
-        
-        document.body.appendChild(clone);
-        
-        // 4. 等待圖片載入後截圖
-        const images = Array.from(clone.querySelectorAll('img'));
-        const promises = images.map(img => {
-            if (img.complete) return Promise.resolve();
-            return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
-        });
+    };
 
-        Promise.all(promises).then(() => {
-            // windowHeight 參數告訴截圖軟體視窗有這麼長
-            html2canvas(clone, { 
-                scale: 2, 
-                backgroundColor: '#ffffff', 
-                useCORS: true,
-                windowHeight: clone.scrollHeight + 100 // ⭐ 告訴它完整高度
-            }).then(canvas => {
-                const link = document.createElement('a'); 
-                link.download = `FoodAI_${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png'); 
-                link.click();
-                document.body.removeChild(clone); 
-                shot.innerHTML = origin;
-            }).catch(() => {
-                alert('截圖失敗'); 
-                document.body.removeChild(clone); 
-                shot.innerHTML = origin; 
+    // 3. 複製文字
+    if (copy) copy.onclick = () => {
+        copyToClipboard(document.getElementById(contentId).innerText, copy);
+    };
+
+    // 4. ⭐ 截圖功能 (防卡死核心修復)
+    if (shot) {
+        // 確保按鈕初始狀態正常 (修復「沒按就在轉」的問題)
+        if (shot.innerHTML.includes('loading-spinner')) {
+            shot.innerHTML = '<i class="ph ph-camera"></i>';
+        }
+
+        shot.onclick = async () => {
+            const originalHTML = shot.innerHTML;
+            
+            // 設定 Loading 狀態
+            shot.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#333;"></div>';
+            shot.style.pointerEvents = 'none'; // 鎖定按鈕
+
+            const source = document.getElementById(captureId);
+            const clone = source.cloneNode(true);
+
+            // 設定 Clone 樣式 (強制展開)
+            clone.style.cssText = `
+                position: fixed; top: -10000px; left: 0; 
+                width: 800px; background: #ffffff; z-index: -9999;
+                height: auto !important; max-height: none !important; 
+                overflow: visible !important;
+            `;
+
+            // 移除干擾元素
+            const vid = clone.querySelector('#videoContainer'); if (vid) vid.remove();
+            const loadBtn = clone.querySelector('#loadVideoBtn'); if (loadBtn) loadBtn.remove();
+            const tools = clone.querySelectorAll('.modal-tools, .modal-actions, .close-modal');
+            tools.forEach(el => el.remove());
+
+            // 展開內部捲軸
+            const scroll = clone.querySelector('.modal-scroll-area');
+            if (scroll) {
+                scroll.style.cssText = `height: auto !important; overflow: visible !important; padding: 40px !important;`;
+            }
+            
+            // 處理圖片 (嘗試跨域)
+            clone.querySelectorAll('img').forEach(img => {
+                img.crossOrigin = "anonymous";
+                img.style.opacity = '1';
+                img.style.transition = 'none';
             });
-        });
-    });
+
+            document.body.appendChild(clone);
+
+            // 下載函式
+            const downloadCanvas = (canvas) => {
+                const link = document.createElement('a');
+                link.download = `FoodAI_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+
+            // ⭐⭐⭐ D. 關鍵修復：暴力移除動畫與透明度 (加強版) ⭐⭐⭐
+            const cloneImages = clone.querySelectorAll('img');
+            cloneImages.forEach(img => {
+                img.crossOrigin = "anonymous"; // 嘗試跨域
+                img.classList.add('loaded');   // 確保有 loaded class
+                // 使用 cssText 一次性寫入 !important 樣式
+                img.style.cssText += `
+                    opacity: 1 !important;
+                    transition: none !important;
+                    animation: none !important;
+                    display: block !important;
+                    visibility: visible !important;
+                `;
+            });
+
+            document.body.appendChild(clone);
+
+            try {
+                // ⭐ 競速模式：如果 html2canvas 超過 3.5秒 沒好，就報錯 (Timeout)
+                const canvas = await Promise.race([
+                    html2canvas(clone, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        windowHeight: clone.scrollHeight + 100
+                    }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3500))
+                ]);
+                
+                downloadCanvas(canvas);
+
+            } catch (error) {
+                console.warn("圖片截取逾時或失敗，切換為文字模式...", error);
+                
+                // ⭐ 救援模式：刪除所有圖片，只截文字 (保證 100% 成功)
+                clone.querySelectorAll('img').forEach(img => img.remove());
+                
+                try {
+                    const textCanvas = await html2canvas(clone, { 
+                        scale: 2, 
+                        backgroundColor: '#ffffff',
+                        windowHeight: clone.scrollHeight + 100
+                    });
+                    downloadCanvas(textCanvas);
+                    // alert("因圖片載入過慢，已為您截取文字食譜。");
+                } catch (e) {
+                    alert("截圖失敗，請稍後再試。");
+                }
+
+            } finally {
+                // ⭐ 最終清理：無論成功失敗，絕對要恢復按鈕
+                if (document.body.contains(clone)) document.body.removeChild(clone);
+                shot.innerHTML = originalHTML;
+                shot.style.pointerEvents = 'auto'; // 解鎖按鈕
+            }
+        };
+    }
 }
 
 function copyToClipboard(text, btn) {
     navigator.clipboard.writeText(text).then(() => {
-        if(btn) { const origin = btn.innerHTML; btn.innerHTML = '<i class="ph ph-check" style="color:#10B981"></i>'; setTimeout(() => btn.innerHTML = origin, 2000); }
+        if (btn) {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-check" style="color:#10B981"></i>';
+            setTimeout(() => btn.innerHTML = originalHTML, 2000);
+        }
     });
 }
